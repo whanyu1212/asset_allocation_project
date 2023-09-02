@@ -16,47 +16,52 @@ from util.utility import (
 )
 from optimization.portfolio_std_solver import minimize_std, find_tangent_line
 
-pd.options.display.precision = None
+# Global configurations for UI
 st.set_page_config(layout="wide")
 st.title("Navigating Asset Allocation")
 
-
+# Global variables
 data = pd.read_csv("./data/processed/processed_data.csv")
 cfg = parse_config("./cfg/config.yml")
 
+################################################################################################################################################
 # Sidebar configuration
 with st.sidebar:
     header = st.header("Configurations")
     st.divider()
     time_range = st.radio(
-        "Choose the period of time you want to analyze:",
-        ["1980s", "1990s", "2000s"],
+        ":calendar: Choose the period of time you want to analyze:",
+        cfg["periods"].keys(),
         captions=["High Inflation", "The equity market bull-run", "Financial Crisis"],
     )
+    st.text("")
     indexes_options = st.multiselect(
-        "Zoom into the specific indexes on the time series plot:",
+        " :mag_right: Zoom into the specific indexes:",
         cfg["indexes_options"],
         cfg["indexes_options"],
     )
     st.text("")
     risk_value = st.slider(
-        "Select a weightage to assign to the risky assets", 0.0, 1.0, 0.5
+        ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 0.5
     )
-    st.divider()
+    st.text("")
 
+    link = ":point_right: Github Repository for the dashboard: [link](https://github.com/whanyu1212/asset_allocation_project)"
+    st.markdown(link, unsafe_allow_html=True)
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         ":bar_chart: Exploratory Analysis",
         ":pencil2: Calculations",
-        ":chart_with_upwards_trend: Efficient Frontier",
+        ":chart: Efficient Frontier",
         ":money_with_wings: Optimal Capital Allocation",
         ":speech_balloon: Chat with your data",
     ]
 )
 
+################################################################################################################################################
+# Tab 1: Exploratory Analysis
 with tab1:
     subset_data = data[data["Period"] == time_range]
-    print([subset_data["U.S. 30 Day TBill TR "].mean() * 12])
     st.subheader(f"Summary Statistics: {time_range}")
     st.dataframe(subset_data.describe(), use_container_width=True)
     st.divider()
@@ -96,7 +101,9 @@ with tab1:
             rangeslider=dict(visible=True),
             type="date",
         ),
+        xaxis_range=[min(subset_data_pivot.Date), max(subset_data_pivot.Date)],
     )
+    fig.update_layout()
     st.plotly_chart(fig, use_container_width=True)
 
 with tab2:

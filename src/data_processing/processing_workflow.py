@@ -57,7 +57,7 @@ def process_raw_data_for_multiple_time_periods(directory_path: str) -> None:
         temp_df = pd.read_excel(path, sheet_name="Data")
         temp_df_processed = process_raw_xlsx_files(temp_df)
         overall_df = pd.concat([overall_df, temp_df_processed], axis=0)
-
+    overall_df.columns = overall_df.columns.str.strip()
     overall_df.to_csv("./data/processed/processed_data.csv", index=False)
 
 
