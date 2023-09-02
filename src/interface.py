@@ -2,6 +2,7 @@ import streamlit as st
 import altair as alt
 import plotly.graph_objects as go
 import pandas as pd
+import tempfile
 import plotly.express as px
 from util.basic_utility import (
     highlight_max_by_column,
@@ -241,4 +242,20 @@ with tab4:
     st.dataframe(group_profile, use_container_width=True)
 
 with tab5:
+    # File uploader
     uploaded_file = st.file_uploader("Choose a file", type="csv")
+    # If something is uploaded, read it into a pd dataframe
+    if uploaded_file is not None:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            csv_path = tmp_file.name
+            df = pd.read_csv(csv_path)
+            if df.empty == False:
+                st.success("File uploaded successfully!")
+            if st.checkbox("Show raw data"):
+                st.dataframe(df, use_container_width=True)
+            st.text("")
+            question = st.text_input(
+                "**Chat with your data**",
+                value="Enter your question here...",
+            )
