@@ -3,18 +3,37 @@ import altair as alt
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
-from util.utility import (
-    highlight_max,
+from util.basic_utility import (
+    highlight_max_by_column,
+    highlight_min_by_column,
     parse_config,
-    latex_formula,
+)
+from util.latex_formula import (
+    latex_formula_monthly_annual,
     portfolio_return_latex,
     portfolio_risk_latex,
+)
+
+from util.functions_by_tab.tab4 import (
     generate_asset_class_df,
+    generate_group_asset_class_df,
     calculate_agg_portfolio_return,
     calculate_agg_portfolio_risk,
-    generate_group_asset_class_df,
 )
-from optimization.portfolio_std_solver import minimize_std, find_tangent_line
+
+
+from util.functions_by_tab.tab1 import create_line_chart
+from util.functions_by_tab.tab2 import (
+    plot_corr_heatmap,
+    plot_cov_heatmap,
+    generate_monthly_n_annual_stats_df,
+    generate_yearly_df_stats,
+)
+from util.functions_by_tab.tab3 import (
+    generate_efficient_frontier_plot,
+    trust_region_solver,
+    find_tangent_line,
+)
 
 # Global configurations for UI
 st.set_page_config(layout="wide")
@@ -22,32 +41,9 @@ st.title("Navigating Asset Allocation")
 
 # Global variables
 data = pd.read_csv("./data/processed/processed_data.csv")
+
 cfg = parse_config("./cfg/config.yml")
 
-################################################################################################################################################
-# Sidebar configuration
-with st.sidebar:
-    header = st.header("Configurations")
-    st.divider()
-    time_range = st.radio(
-        ":calendar: Choose the period of time you want to analyze:",
-        cfg["periods"].keys(),
-        captions=["High Inflation", "The equity market bull-run", "Financial Crisis"],
-    )
-    st.text("")
-    indexes_options = st.multiselect(
-        " :mag_right: Zoom into the specific indexes:",
-        cfg["indexes_options"],
-        cfg["indexes_options"],
-    )
-    st.text("")
-    risk_value = st.slider(
-        ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 0.5
-    )
-    st.text("")
-
-    link = ":point_right: Github Repository for the dashboard: [link](https://github.com/whanyu1212/asset_allocation_project)"
-    st.markdown(link, unsafe_allow_html=True)
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         ":bar_chart: Exploratory Analysis",
@@ -59,214 +55,159 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 )
 
 ################################################################################################################################################
+# Sidebar configuration
+with st.sidebar:
+    header = st.header("Configurations")
+
+    st.divider()
+
+    time_range = st.radio(
+        ":calendar: Choose the period of time you want to analyze:",
+        sorted(cfg["periods"].keys()),
+        captions=["High Inflation", "The equity market bull-run", "Financial Crisis"],
+    )
+
+    st.text("")  # using this as divider but without the line
+
+    indexes_options = st.multiselect(
+        " :mag_right: Zoom into the specific indexes:",
+        cfg["indexes_options"],
+        cfg["indexes_options"],
+    )
+
+    st.text("")
+
+    risk_value = st.slider(
+        ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 0.5
+    )
+
+    st.text("")
+
+    # Add a link to the github repo
+    link = ":point_right: Github Repository for the dashboard: [link](https://github.com/whanyu1212/asset_allocation_project)"
+    st.markdown(link, unsafe_allow_html=True)
+
+################################################################################################################################################
 # Tab 1: Exploratory Analysis
 with tab1:
     subset_data = data[data["Period"] == time_range]
-    st.subheader(f"Summary Statistics: {time_range}")
+
+    st.markdown(f"**Summary Statistics for {time_range}:**", unsafe_allow_html=True)
+
+    # Display the summary statistics as a dataframe
     st.dataframe(subset_data.describe(), use_container_width=True)
+
     st.divider()
-    st.subheader("Time Series Plot")
+
+    st.markdown(f"**Time Series Plot for {time_range}:**", unsafe_allow_html=True)
+
+    # Pivot the df so we can a grouped line chart by indexes
     subset_data_pivot = (
         pd.melt(
             subset_data.drop("Period", axis=1),
-            id_vars=["Date"],
+            id_vars="Date",
             var_name="Indexes",
             value_name="Value",
         )
         .sort_values(by=["Date", "Indexes"])
         .query("Indexes in @indexes_options")
     )
-    fig = px.line(
-        subset_data_pivot,
-        x="Date",
-        y="Value",
-        color="Indexes",
-        markers=True,
-    )
-    fig.update_layout(
-        xaxis=dict(
-            rangeselector=dict(
-                buttons=list(
-                    [
-                        dict(count=1, label="1m", step="month", stepmode="backward"),
-                        dict(count=6, label="6m", step="month", stepmode="backward"),
-                        dict(count=1, label="YTD", step="year", stepmode="todate"),
-                        dict(count=1, label="1y", step="year", stepmode="backward"),
-                        dict(count=3, label="3y", step="year", stepmode="backward"),
-                        dict(count=5, label="5y", step="year", stepmode="backward"),
-                        dict(step="all"),
-                    ]
-                )
-            ),
-            rangeslider=dict(visible=True),
-            type="date",
-        ),
-        xaxis_range=[min(subset_data_pivot.Date), max(subset_data_pivot.Date)],
-    )
-    fig.update_layout()
-    st.plotly_chart(fig, use_container_width=True)
 
+    # Call the function to generate a line chart
+    create_line_chart(subset_data_pivot)
+
+################################################################################################################################################
+# Tab 2: Calculations for question 1
 with tab2:
-    st.latex(latex_formula)
+    st.markdown(f"**Formula for aggregated statistics:**", unsafe_allow_html=True)
+    st.latex(latex_formula_monthly_annual)
     st.divider()
 
-    monthly_annual_stats = (
-        pd.melt(
-            data.query("Period==@time_range").drop("Period", axis=1),
-            id_vars=["Date"],
-            var_name="Indexes",
-            value_name="Value",
-        )
-        .sort_values(by=["Date", "Indexes"])
-        .groupby("Indexes")
-        .agg(
-            Monthly_average_return=("Value", "mean"),
-            Monthly_sd=("Value", "std"),
-        )
-        .reset_index()
-        .assign(Annualized_return=lambda x: x["Monthly_average_return"] * 12)
-        .assign(Annualized_sd=lambda x: x["Monthly_sd"] * 12**0.5)
-    )
-    max_values = monthly_annual_stats.select_dtypes(include=["number"]).max()
-    st.markdown("**Monthly and Annual Average Return and Standard Deviation**")
-    st.dataframe(
-        monthly_annual_stats.style.apply(highlight_max),
-        use_container_width=True,
-        width=200,
-        hide_index=True,
-    )
+    st.markdown("**Monthly and Annual Average Return and Standard Deviation:**")
+    # Call the function to generate a dataframe to store the monthly and annual aggregated statistics
+    generate_monthly_n_annual_stats_df(data, time_range)
+
     st.divider()
     col1, col2 = st.columns(2)
+
     with col1:
-        # df1 = data.query("Period==@time_range").drop(
-        #     ["Date", "Period", "U.S. 30 Day TBill TR "], axis=1
-        # )
-        yearly_df = (
-            subset_data.drop(["Period", "U.S. 30 Day TBill TR "], axis=1)
-            .assign(
-                Year=lambda x: x["Date"].apply(lambda x: x.split("-")[0]),
-            )
-            .drop("Date", axis=1)
-            .groupby("Year")
-            .mean()
-            .reset_index()
-            .drop("Year", axis=1)
+        yearly_df, yearly_cov, yearly_corr, headers = generate_yearly_df_stats(
+            subset_data
         )
-        fig1 = px.imshow(
-            yearly_df.corr(),  # You can use df.corr() to compute the correlation matrix
-            x=yearly_df.columns,
-            y=yearly_df.columns,
-            # zmin=-1,  # Set the color scale range from -1 to 1 for correlation values
-            # zmax=1,
-            color_continuous_scale="RdBu_r",
-            text_auto=True,  # Choose a color scale    e the correlation matrix as text annotations
-            labels=dict(color="Correlation"),
-        )
+        plot_corr_heatmap(yearly_corr, headers)
 
-        fig1.update_layout(title="Heatmap of Correlation Matrix")
-        fig1.update_coloraxes(showscale=False)
-        st.plotly_chart(fig1)
     with col2:
-        fig2 = px.imshow(
-            yearly_df.cov(),  # You can use df.corr() to compute the correlation matrix
-            x=yearly_df.columns,
-            y=yearly_df.columns,
-            # zmin=0,  # Set the color scale range from -1 to 1 for correlation values
-            # zmax=0.5,
-            color_continuous_scale="Viridis",
-            text_auto=True,  # Choose a color scale    e the correlation matrix as text annotations
-            labels=dict(color="Covariance"),
-        )
+        plot_cov_heatmap(yearly_cov, headers)
 
-        fig2.update_layout(title="Heatmap of Covariance Matrix")
-        fig2.update_coloraxes(showscale=False)
-        st.plotly_chart(fig2)
+################################################################################################################################################
 
 with tab3:
+    st.markdown("**Optimal Asset Allocation:**")
+
+    # Expected return of the risky assets
     expected_returns = (
-        subset_data.drop(["Date", "Period", "U.S. 30 Day TBill TR "], axis=1).mean()
-        * 12
+        subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
     )
 
-    cov_matrix = yearly_df.cov()
+    # List of pre-defined target mean returns
     target_mean_returns = cfg["periods"][time_range]
-    efficient_set = minimize_std(expected_returns, cov_matrix, target_mean_returns)
-    columns_to_format = [
-        "Russell 2000 TR ",
-        "S&P 500 TR ",
-        "LB LT Gvt/Credit TR ",
-        "MSCI EAFE TR ",
-    ]
-    st.subheader("2. Optimal Asset Allocation")
-    st.dataframe(efficient_set.sort_values(by="min_std_dev"), use_container_width=True)
+
+    efficient_set = trust_region_solver(
+        expected_returns, yearly_cov, target_mean_returns
+    )
+
+    # Generate the dataframe that stores weights and portfolio mean returns
+    # Color the minimum standard deviation and maximum Sharpe Ratio
+    st.dataframe(
+        efficient_set.style.highlight_min(
+            axis=0, props="background-color:LightGreen;", subset=["min_std_dev"]
+        ).highlight_max(
+            axis=0, props="background-color:LightCoral;", subset=["Sharpe_Ratio"]
+        ),
+        use_container_width=True,
+    )
+    st.caption(
+        "Remark: The allocation weights for each asset class are determined through the application of the trust region method.\
+        The minimum standard deviation is highlighted in green and the maximum Sharpe is highlighted in coral."
+    )
     st.divider()
+
+    # Plot the curve and the tangential line
     x_scale = alt.Scale(
         domain=[
             0,
             efficient_set["min_std_dev"].max() + 0.5,
         ]
-    )  # Replace min_value_x and max_value_x with your desired limits for the x-axis
+    )
     y_scale = alt.Scale(
         domain=[
             0,
             efficient_set["target_mean_returns"].max() + 1,
         ]
     )
-    chart = (
-        alt.Chart(efficient_set)
-        .mark_circle(size=60)
-        .encode(
-            x=alt.X(
-                "min_std_dev",
-                scale=x_scale,
-                axis=alt.Axis(title="Anualized Volatility", tickCount=5),
-            ),  # Set the custom X-axis label
-            y=alt.Y(
-                "target_mean_returns",
-                scale=y_scale,
-                axis=alt.Axis(title="Anualized Expected Return", tickCount=5),
-            ),  # Set the custom Y-axis label
-            tooltip=efficient_set.columns.tolist(),
-            # color=alt.Color("Sharpe_Ratio:Q"),
-            color=alt.Color(
-                "Sharpe_Ratio:Q",
-                scale=alt.Scale(range=["orange", "red", "blue"]),
-            ),
-        )
-        .properties(
-            width=600, height=500, title="Efficient Frontier Set"  # Set the width
-        )  # Set the chart title
-        .interactive()
-    )
 
-    tangent_df = find_tangent_line(efficient_set, subset_data)
-    line_chart = (
-        alt.Chart(tangent_df)  # Replace 'your_line_data' with your actual line data
-        .mark_line(color="red", strokeDash=[5, 5])  # Use 'mark_line' for a line chart
-        .encode(
-            x=alt.X(
-                "tangent_x",  # Replace with your X-axis field  # Customize X-axis label
-            ),
-            y=alt.Y(
-                "tangent_y",  # Replace with your Y-axis field  # Customize Y-axis label
-            ),
-        )
-    )
-    st.altair_chart(chart + line_chart, theme="streamlit", use_container_width=True)
+    tangent_df = find_tangent_line(efficient_set, subset_data, cfg)
+    generate_efficient_frontier_plot(efficient_set, x_scale, y_scale, tangent_df)
 
+################################################################################################################################################
+# Tab 4: Calculations for optimal capital allocation
 with tab4:
-    st.subheader("3. Optimal Asset Allocation")
+    st.markdown("**Optimal Capital Allocation:**")
     st.text("")
+    # Dataframe that stores the dollar amount allocated to each asset class based on the optimal weight calculated
     asset_class_df = generate_asset_class_df(cfg, efficient_set, wealth=1000000)
     st.dataframe(asset_class_df, use_container_width=True)
     st.caption(
-        "The table above shows the optimal asset allocation (in dollars) for each asset class"
+        "The table above shows the optimal capital allocation (in dollars) for each asset class"
     )
     st.divider()
-    st.markdown(f"<h5>Formula: </h5>", unsafe_allow_html=True)
+    # Use latex to display the formula
+    st.markdown(f"<h6>Formula: </h6>", unsafe_allow_html=True)
+    # Latex formula
     st.latex(portfolio_return_latex)
     st.latex(portfolio_risk_latex)
     st.divider()
+    # Dataframe that stores the portfolio return and risk for each investor
     portfolio_return_df = calculate_agg_portfolio_return(
         subset_data, efficient_set, cfg
     )
@@ -280,8 +221,9 @@ with tab4:
         "Remark: They are all investing in the tangency portfolio with the same weights for the risky assets, thus the composition is the same."
     )
     st.divider()
+    # Dynamic value based on the slider in the sidebar
     st.markdown(
-        f"<h5>Group Average Risk Profile: {risk_value}</h5>",
+        f"<h6>Group Average Risk Profile: {risk_value}</h6>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -291,8 +233,9 @@ with tab4:
         f"- Allocation to risk free assets: {(1-risk_value)*100}%",
         unsafe_allow_html=True,
     )
+    # Dollar investment for each asset class based on the weightage chosen in the slider
     group_profile = generate_group_asset_class_df(
-        risk_value, subset_data, efficient_set, wealth=1000000
+        cfg, risk_value, subset_data, efficient_set, wealth=1000000
     )
     st.text("")
     st.dataframe(group_profile, use_container_width=True)

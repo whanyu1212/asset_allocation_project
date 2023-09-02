@@ -11,8 +11,14 @@ periods:
 
 
 indexes_options:
-  ["U.S. 30 Day TBill TR ","Russell 2000 TR ","S&P 500 TR ","LB LT Gvt/Credit TR ","MSCI EAFE TR "]
+  ["U.S. 30 Day TBill TR","Russell 2000 TR","S&P 500 TR","LB LT Gvt/Credit TR","MSCI EAFE TR"]
 
+risky_assets:
+  ["Russell 2000 TR","S&P 500 TR","LB LT Gvt/Credit TR","MSCI EAFE TR"]
+
+risk_free_asset:
+  "U.S. 30 Day TBill TR"
+  
 weight:
   Alex:
     0.2
