@@ -35,6 +35,7 @@ from util.functions_by_tab.tab3 import (
     trust_region_solver,
     find_tangent_line,
 )
+from util.functions_by_tab.tab5 import get_qna_ans
 
 # Global configurations for UI
 st.set_page_config(layout="wide")
@@ -257,5 +258,14 @@ with tab5:
             st.text("")
             question = st.text_input(
                 "**Chat with your data**",
-                value="Enter your question here...",
+                value="""Enter your question here...""",
             )
+
+            if question != """Enter your question here...""":
+                with st.spinner(text="Retrieving answer in progress..."):
+                    get_qna_ans(df, question)
+    else:
+        st.warning(
+            "Please upload a non-empty csv file before you can start chatting with the data",
+            icon="⚠️",
+        )
