@@ -26,7 +26,7 @@ def trust_region_solver(expected_returns, cov_matrix, target_mean_returns):
         # Define the initial guess for portfolio weights
         initial_weights = np.ones(len(expected_returns)) / len(expected_returns)
 
-        bounds = [(0, None) for _ in range(len(expected_returns))]
+        # bounds = [(0, None) for _ in range(len(expected_returns))]
 
         # Define the optimization problem with both constraints
         constraints = [
@@ -41,7 +41,7 @@ def trust_region_solver(expected_returns, cov_matrix, target_mean_returns):
             cov_matrix,
             method="trust-constr",
             constraints=constraints,
-            bounds=bounds,
+            # bounds=bounds,
         )
 
         # Extract the optimized portfolio weights
