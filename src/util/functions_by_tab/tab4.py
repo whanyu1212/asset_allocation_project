@@ -50,14 +50,14 @@ def calculate_agg_portfolio_return(subset_data, efficient_set, cfg):
     return portfolio_return_df.applymap("{:,.2f} %".format)
 
 
-def calculate_agg_portfolio_risk(yearly_df, efficient_set, cfg):
+def calculate_agg_portfolio_risk(cov_matrix, efficient_set, cfg):
     weights = efficient_set.loc[efficient_set.Sharpe_Ratio.idxmax()][
         cfg["risky_assets"]
     ].values
     lst = []
     for i in cfg["weight"].keys():
         risky_allocation = cfg["weight"][i]
-        cov_matrix = yearly_df.drop("Year", axis=1).cov()
+        # cov_matrix = yearly_df.drop("Year", axis=1).cov()
         portfolio_variance = portfolio_variance = np.dot(
             weights.T, np.dot(cov_matrix, weights)
         )

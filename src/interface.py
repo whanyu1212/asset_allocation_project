@@ -160,17 +160,22 @@ with tab3:
     st.markdown("**Optimal Asset Allocation:**")
 
     # Expected return of the risky assets
-    # expected_returns = (
-    #     subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
-    # )
-    expected_returns = yearly_df.drop(["Year"], axis=1).mean()
-    yearly_cov = np.array(yearly_df.drop(["Year"], axis=1).cov())
+    expected_returns = (
+        subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
+    )
+
+    # cov_matrix = subset_data.drop(
+    #     ["Date", "Period", cfg["risk_free_asset"]], axis=1
+    # ).cov()
+
+    # expected_returns = yearly_df.drop(["Year"], axis=1).mean()
+    cov_matrix = np.array(yearly_df.drop(["Year"], axis=1).cov())
 
     # List of pre-defined target mean returns
     target_mean_returns = cfg["periods"][time_range]
 
     efficient_set = trust_region_solver(
-        expected_returns, yearly_cov, target_mean_returns
+        expected_returns, cov_matrix, target_mean_returns
     )
 
     # Generate the dataframe that stores weights and portfolio mean returns
@@ -228,7 +233,7 @@ with tab4:
     portfolio_return_df = calculate_agg_portfolio_return(
         subset_data, efficient_set, cfg
     )
-    portfolio_risk_df = calculate_agg_portfolio_risk(yearly_df, efficient_set, cfg)
+    portfolio_risk_df = calculate_agg_portfolio_risk(cov_matrix, efficient_set, cfg)
     col3, col4 = st.columns(2)
     with col3:
         st.dataframe(portfolio_return_df, use_container_width=True)
