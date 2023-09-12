@@ -2,8 +2,11 @@ import streamlit as st
 import altair as alt
 import plotly.graph_objects as go
 import pandas as pd
+import pandas_profiling
 import tempfile
 import plotly.express as px
+from streamlit_pandas_profiling import st_profile_report
+from pandas_profiling import ProfileReport
 from util.basic_utility import (
     highlight_max_by_column,
     highlight_min_by_column,
@@ -59,7 +62,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 ################################################################################################################################################
 # Sidebar configuration
 with st.sidebar:
-    header = st.header("Configurations")
+    header = st.header("Configurations :gear:")
 
     st.divider()
 
@@ -94,10 +97,14 @@ with st.sidebar:
 with tab1:
     subset_data = data[data["Period"] == time_range]
 
-    st.markdown(f"**Summary Statistics for {time_range}:**", unsafe_allow_html=True)
+    # st.markdown(f"**Summary Statistics for {time_range}:**", unsafe_allow_html=True)
+
+    pr = subset_data.profile_report()
+
+    st_profile_report(pr)
 
     # Display the summary statistics as a dataframe
-    st.dataframe(subset_data.describe(), use_container_width=True)
+    # st.dataframe(subset_data.describe(), use_container_width=True)
 
     st.divider()
 
