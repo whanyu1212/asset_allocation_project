@@ -4,9 +4,17 @@ import numpy as np
 
 
 # Helper functions
+# def highlight_max_by_column(s):
+#     is_max = s == s.max()
+#     return ["background-color: LightCoral" if v else "" for v in is_max]
+
+
 def highlight_max_by_column(s):
-    is_max = s == s.max()
-    return ["background-color: LightCoral" if v else "" for v in is_max]
+    if s.dtype in (int, float):
+        is_max = s == s.max()
+        return ["background-color: RoyalBlue" if v else "" for v in is_max]
+    else:
+        return ["" for _ in s]
 
 
 def highlight_min_by_column(s):

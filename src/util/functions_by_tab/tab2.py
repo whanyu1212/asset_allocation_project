@@ -3,11 +3,18 @@ import streamlit as st
 
 import pandas as pd
 
+from util.basic_utility import (
+    highlight_max_by_column,
+    highlight_min_by_column,
+    parse_config,
+)
 
-from util.basic_utility import highlight_max_by_column
+# from util.basic_utility import highlight_max_by_column
 
 
-def plot_corr_heatmap(yearly_corr, headers):
+def plot_corr_heatmap(yearly_df):
+    yearly_corr = yearly_df.drop("Year", axis=1).corr()
+    headers = yearly_df.drop("Year", axis=1).columns
     fig = px.imshow(
         yearly_corr,
         x=headers,
@@ -24,7 +31,9 @@ def plot_corr_heatmap(yearly_corr, headers):
     st.plotly_chart(fig)
 
 
-def plot_cov_heatmap(yearly_cov, headers):
+def plot_cov_heatmap(yearly_df):
+    yearly_cov = yearly_df.drop("Year", axis=1).cov()
+    headers = yearly_df.drop("Year", axis=1).columns
     fig = px.imshow(
         yearly_cov,
         x=headers,
@@ -39,10 +48,10 @@ def plot_cov_heatmap(yearly_cov, headers):
     st.plotly_chart(fig)
 
 
-def generate_monthly_n_annual_stats_df(data, time_range):
+def generate_monthly_n_annual_stats_df(subset_data):
     monthly_annual_stats = (
         pd.melt(
-            data.query("Period==@time_range").drop("Period", axis=1),
+            subset_data.drop("Period", axis=1),
             id_vars=["Date"],
             var_name="Indexes",
             value_name="Value",
@@ -65,6 +74,46 @@ def generate_monthly_n_annual_stats_df(data, time_range):
     )
 
 
+def generate_monthly_n_annual_stats_df_approach2(subset_data, yearly_df):
+    final = (
+        pd.melt(
+            subset_data.drop("Period", axis=1),
+            id_vars=["Date"],
+            var_name="Indexes",
+            value_name="Value",
+        )
+        .sort_values(by=["Date", "Indexes"])
+        .groupby("Indexes")
+        .agg(
+            Monthly_average_return=("Value", "mean"),
+            Monthly_sd=("Value", "std"),
+        )
+        .reset_index()
+    ).merge(
+        (
+            pd.melt(
+                yearly_df,
+                id_vars=["Year"],
+                var_name="Indexes",
+                value_name="Value",
+            )
+            .sort_values(by=["Year", "Indexes"])
+            .groupby("Indexes")
+            .agg(
+                Annualized_return=("Value", "mean"),
+                Annualized_sd=("Value", "std"),
+            )
+            .reset_index()
+        ),
+        on="Indexes",
+    )
+    st.dataframe(
+        final.style.apply(highlight_max_by_column),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
 def generate_yearly_df_stats(subset_data):
     yearly_df = (
         subset_data.drop(["Period", "U.S. 30 Day TBill TR"], axis=1)
@@ -73,8 +122,8 @@ def generate_yearly_df_stats(subset_data):
         )
         .drop("Date", axis=1)
         .groupby("Year")
-        .mean()
+        .sum()
         .reset_index()
-        .drop("Year", axis=1)
     )
-    return yearly_df, yearly_df.cov(), yearly_df.corr(), yearly_df.columns
+    return yearly_df
+    # return yearly_df, yearly_df.cov(), yearly_df.corr(), yearly_df.columns

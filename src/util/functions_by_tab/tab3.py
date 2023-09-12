@@ -87,7 +87,7 @@ def find_tangent_line(efficient_set, subset_data, cfg):
     # The _ represents r_value, p_value and std_err in the linregress function (sequentially)
     slope, intercept, _, _, _ = linregress(x_coord, y_coord)
     # Use a few random x-values to extend the tangent line from the optimal portfolio
-    new_x = np.array([1.0, 1.5, 2.0, 2.5, 3.0])
+    new_x = np.array([1.0, 5.0, 10.0, 15.0, 20.0])
 
     # Use the linear equation to predict y-values
     new_y = slope * new_x + intercept

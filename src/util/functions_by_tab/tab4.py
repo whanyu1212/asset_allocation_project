@@ -57,7 +57,7 @@ def calculate_agg_portfolio_risk(yearly_df, efficient_set, cfg):
     lst = []
     for i in cfg["weight"].keys():
         risky_allocation = cfg["weight"][i]
-        cov_matrix = yearly_df.cov()
+        cov_matrix = yearly_df.drop("Year", axis=1).cov()
         portfolio_variance = portfolio_variance = np.dot(
             weights.T, np.dot(cov_matrix, weights)
         )

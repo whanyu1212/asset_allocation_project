@@ -5,7 +5,9 @@ latex_formula_monthly_annual = r"""\begin{align*}
             \sqrt{\frac{1}{n-1} \sum_{i=1}^{n}(X_i - \bar{X})^2} \\
             &\text{Annual Average Return} : 12 
             \times \bar{X} & \text{Annual Standard Deviation} : 
-            \sqrt{12} \times \sqrt{\frac{1}{n-1} \sum_{i=1}^{n}(X_i - \bar{X})^2}
+            \sqrt{12} \times \sqrt{\frac{1}{n-1} \sum_{i=1}^{n}(X_i - \bar{X})^2}\\
+            &\text{Average Annual Mean} :\frac{1}{N} \sum_{i=1}^{N} \left(\sum_{j=1}^{12} x_{ij}\right)\
+            &\text{Annual Standard Deviation} : \sqrt{\frac{1}{n-1} \sum_{i=1}^{n}(\text{Annual Return}_i - \bar{Annual\ Return})^2}
             \end{align*}
             """
 portfolio_return_latex = (

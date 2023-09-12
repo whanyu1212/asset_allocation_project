@@ -2,6 +2,7 @@ import streamlit as st
 import altair as alt
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 import pandas_profiling
 import tempfile
 import plotly.express as px
@@ -31,6 +32,7 @@ from util.functions_by_tab.tab2 import (
     plot_corr_heatmap,
     plot_cov_heatmap,
     generate_monthly_n_annual_stats_df,
+    generate_monthly_n_annual_stats_df_approach2,
     generate_yearly_df_stats,
 )
 from util.functions_by_tab.tab3 import (
@@ -133,20 +135,24 @@ with tab2:
     st.divider()
 
     st.markdown("**Monthly and Annual Average Return and Standard Deviation:**")
+    st.text("")
+    st.markdown("<ins>Approach 1:</ins>", unsafe_allow_html=True)
+    st.text("")
     # Call the function to generate a dataframe to store the monthly and annual aggregated statistics
-    generate_monthly_n_annual_stats_df(data, time_range)
+    yearly_df = generate_yearly_df_stats(subset_data)
+    generate_monthly_n_annual_stats_df(subset_data)
+    st.markdown("<ins>Approach 2:</ins>", unsafe_allow_html=True)
+    generate_monthly_n_annual_stats_df_approach2(subset_data, yearly_df)
 
     st.divider()
     col1, col2 = st.columns(2)
 
     with col1:
-        yearly_df, yearly_cov, yearly_corr, headers = generate_yearly_df_stats(
-            subset_data
-        )
-        plot_corr_heatmap(yearly_corr, headers)
+        plot_corr_heatmap(yearly_df)
 
     with col2:
-        plot_cov_heatmap(yearly_cov, headers)
+        plot_cov_heatmap(yearly_df)
+
 
 ################################################################################################################################################
 
@@ -154,9 +160,11 @@ with tab3:
     st.markdown("**Optimal Asset Allocation:**")
 
     # Expected return of the risky assets
-    expected_returns = (
-        subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
-    )
+    # expected_returns = (
+    #     subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
+    # )
+    expected_returns = yearly_df.drop(["Year"], axis=1).mean()
+    yearly_cov = np.array(yearly_df.drop(["Year"], axis=1).cov())
 
     # List of pre-defined target mean returns
     target_mean_returns = cfg["periods"][time_range]
