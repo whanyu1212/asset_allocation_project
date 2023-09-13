@@ -29,10 +29,10 @@ from util.functions_by_tab.tab4 import (
 
 from util.functions_by_tab.tab1 import create_line_chart
 from util.functions_by_tab.tab2 import (
-    plot_corr_heatmap,
-    plot_cov_heatmap,
+    geo_mean,
+    plot_corr_heatmap_by_month,
+    plot_corr_heatmap_by_year,
     generate_monthly_n_annual_stats_df,
-    generate_monthly_n_annual_stats_df_approach2,
     generate_yearly_df_stats,
 )
 from util.functions_by_tab.tab3 import (
@@ -49,12 +49,14 @@ st.title("Navigating Asset Allocation")
 # Global variables
 data = pd.read_csv("./data/processed/processed_data.csv")
 
+numeric_columns = data.select_dtypes(include="number").columns.tolist()
+
 cfg = parse_config("./cfg/config.yml")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         ":bar_chart: Exploratory Analysis",
-        ":pencil2: Calculations",
+        ":pencil2: Statistics for Question 1",
         ":chart: Efficient Frontier",
         ":money_with_wings: Optimal Capital Allocation",
         ":speech_balloon: Chat with your data",
@@ -110,6 +112,10 @@ with tab1:
 
     st.divider()
 
+
+################################################################################################################################################
+# Tab 2: Calculations for question 1
+with tab2:
     st.markdown(f"**Time Series Plot for {time_range}:**", unsafe_allow_html=True)
 
     # Pivot the df so we can a grouped line chart by indexes
@@ -126,32 +132,26 @@ with tab1:
 
     # Call the function to generate a line chart
     create_line_chart(subset_data_pivot)
+    st.divider()
 
-################################################################################################################################################
-# Tab 2: Calculations for question 1
-with tab2:
+    # Display the formula for the aggregated statistics
     st.markdown(f"**Formula for aggregated statistics:**", unsafe_allow_html=True)
     st.latex(latex_formula_monthly_annual)
     st.divider()
 
     st.markdown("**Monthly and Annual Average Return and Standard Deviation:**")
     st.text("")
-    st.markdown("<ins>Approach 1:</ins>", unsafe_allow_html=True)
-    st.text("")
     # Call the function to generate a dataframe to store the monthly and annual aggregated statistics
     yearly_df = generate_yearly_df_stats(subset_data)
-    generate_monthly_n_annual_stats_df(subset_data)
-    st.markdown("<ins>Approach 2:</ins>", unsafe_allow_html=True)
-    generate_monthly_n_annual_stats_df_approach2(subset_data, yearly_df)
+    generate_monthly_n_annual_stats_df(subset_data, yearly_df)
 
     st.divider()
     col1, col2 = st.columns(2)
 
     with col1:
-        plot_corr_heatmap(yearly_df)
-
+        plot_corr_heatmap_by_month(subset_data, cfg)
     with col2:
-        plot_cov_heatmap(yearly_df)
+        plot_corr_heatmap_by_year(yearly_df, cfg)
 
 
 ################################################################################################################################################
@@ -169,7 +169,9 @@ with tab3:
     # ).cov()
 
     # expected_returns = yearly_df.drop(["Year"], axis=1).mean()
-    cov_matrix = np.array(yearly_df.drop(["Year"], axis=1).cov())
+    cov_matrix = np.array(
+        yearly_df.drop(["Year", cfg["risk_free_asset"]], axis=1).cov()
+    )
 
     # List of pre-defined target mean returns
     target_mean_returns = cfg["periods"][time_range]

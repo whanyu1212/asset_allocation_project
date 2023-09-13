@@ -12,14 +12,17 @@ import numpy as np
 def highlight_max_by_column(s):
     if s.dtype in (int, float):
         is_max = s == s.max()
-        return ["background-color: RoyalBlue" if v else "" for v in is_max]
+        return ["background-color: LightCoral" if v else "" for v in is_max]
     else:
         return ["" for _ in s]
 
 
 def highlight_min_by_column(s):
-    is_min = s == s.min()
-    return ["background-color: LightBlue" if v else "" for v in is_min]
+    if s.dtype in (int, float):
+        is_min = s == s.min()
+        return ["background-color: LightBlue" if v else "" for v in is_min]
+    else:
+        return ["" for _ in s]
 
 
 def parse_config(path):
