@@ -113,4 +113,3 @@ def generate_yearly_df_stats(subset_data):
         .reset_index()
     )
     return yearly_df
-    # return yearly_df, yearly_df.cov(), yearly_df.corr(), yearly_df.columns

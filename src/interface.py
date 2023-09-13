@@ -95,7 +95,9 @@ with st.sidebar:
     # Add a link to the github repo
     link = ":point_right: Github Repository for the dashboard: [link](https://github.com/whanyu1212/asset_allocation_project)"
     st.markdown(link, unsafe_allow_html=True)
-
+    st.text("")
+    link_solver = ":point_right: Documentation for the solver: [link](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-trustconstr.html#optimize-minimize-trustconstr)"
+    st.markdown(link_solver, unsafe_allow_html=True)
 ################################################################################################################################################
 # Tab 1: Exploratory Analysis
 with tab1:
