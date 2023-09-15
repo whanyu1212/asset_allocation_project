@@ -1,5 +1,6 @@
 <h1>Asset Allocation Project</h1>
-<h3> Simple Workflow Diagram </h3>
+Simple Workflow Diagram:
+
 ```mermaid
 flowchart LR
   subgraph TABS
@@ -24,8 +25,8 @@ flowchart LR
   DATA_PROCESSING --> TABS --> STREAMLIT_INTERFACE
   
 ```
-<br>
-<h3>Folder structure:</h3>
+
+Folder structure:
 ```
 |-- .streamlit|
 |   |-- secrets.toml
@@ -60,4 +61,3 @@ flowchart LR
 |-- pyproject.toml
 |-- README.md
 ```
-<br>
