@@ -34,9 +34,7 @@
 |-- pyproject.toml
 |-- README.md
 ```
-
-
-
+<br>
 <h3> Simple Workflow Diagram </h3>
 
 ```mermaid
