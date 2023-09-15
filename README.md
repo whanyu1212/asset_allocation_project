@@ -1,6 +1,6 @@
-<h1>Asset Allocation Project<h1>
+<h1>Asset Allocation Project</h1>
 
-**Folder structure:**
+Folder structure:
 |-- .streamlit|
 |   |-- secrets.toml
 |-- cfg|
