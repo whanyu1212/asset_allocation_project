@@ -1,4 +1,30 @@
 <h1>Asset Allocation Project</h1>
+<h3> Simple Workflow Diagram </h3>
+```mermaid
+flowchart LR
+  subgraph TABS
+    direction TB
+    subgraph EDA
+        direction LR
+        Pandas_profiling
+    end
+    subgraph Calculating_Statistics
+        direction TB
+        Timeseries -->Monthly_n_annual_statistics -->Correlation_matrix
+    end
+    subgraph Efficient_Frontier
+        direction TB
+        Optimization -->Efficient_set_plot
+    end
+    subgraph Optimal_Capital_Allocation
+        direction TB
+        Calculate_dollar_investment -->Group_risk_profile
+    end
+  end
+  DATA_PROCESSING --> TABS --> STREAMLIT_INTERFACE
+  
+```
+<br>
 <h3>Folder structure:</h3>
 ```
 |-- .streamlit|
@@ -35,29 +61,3 @@
 |-- README.md
 ```
 <br>
-<h3> Simple Workflow Diagram </h3>
-
-```mermaid
-flowchart LR
-  subgraph TABS
-    direction TB
-    subgraph EDA
-        direction LR
-        Pandas_profiling
-    end
-    subgraph Calculating_Statistics
-        direction TB
-        Timeseries -->Monthly_n_annual_statistics -->Correlation_matrix
-    end
-    subgraph Efficient_Frontier
-        direction TB
-        Optimization -->Efficient_set_plot
-    end
-    subgraph Optimal_Capital_Allocation
-        direction TB
-        Calculate_dollar_investment -->Group_risk_profile
-    end
-  end
-  DATA_PROCESSING --> TABS --> STREAMLIT_INTERFACE
-  
-```
