@@ -1,6 +1,7 @@
 <h1>Asset Allocation Project</h1>
 
 Folder structure:
+```
 |-- .streamlit|
 |   |-- secrets.toml
 |-- cfg|
@@ -33,3 +34,4 @@ Folder structure:
 |-- poetry.lock
 |-- pyproject.toml
 |-- README.md
+```
