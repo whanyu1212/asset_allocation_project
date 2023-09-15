@@ -3,14 +3,10 @@ import altair as alt
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-import pandas_profiling
 import tempfile
-import plotly.express as px
+import pandas_profiling
 from streamlit_pandas_profiling import st_profile_report
-from pandas_profiling import ProfileReport
 from util.basic_utility import (
-    highlight_max_by_column,
-    highlight_min_by_column,
     parse_config,
 )
 from util.latex_formula import (
@@ -56,7 +52,7 @@ cfg = parse_config("./cfg/config.yml")
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         ":bar_chart: Exploratory Analysis",
-        ":pencil2: Statistics for Question 1",
+        ":pencil2: Return & Risk Statistics",
         ":chart: Efficient Frontier",
         ":money_with_wings: Optimal Capital Allocation",
         ":speech_balloon: Chat with your data",
@@ -79,7 +75,7 @@ with st.sidebar:
     st.text("")  # using this as divider but without the line
 
     indexes_options = st.multiselect(
-        " :mag_right: Zoom into the specific indexes:",
+        " :mag_right: Zoom into the specific indexes (multiselect):",
         cfg["indexes_options"],
         cfg["indexes_options"],
     )
@@ -99,18 +95,14 @@ with st.sidebar:
     link_solver = ":point_right: Documentation for the solver: [link](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-trustconstr.html#optimize-minimize-trustconstr)"
     st.markdown(link_solver, unsafe_allow_html=True)
 ################################################################################################################################################
+
 # Tab 1: Exploratory Analysis
 with tab1:
     subset_data = data[data["Period"] == time_range]
 
-    # st.markdown(f"**Summary Statistics for {time_range}:**", unsafe_allow_html=True)
-
     pr = subset_data.profile_report()
 
     st_profile_report(pr)
-
-    # Display the summary statistics as a dataframe
-    # st.dataframe(subset_data.describe(), use_container_width=True)
 
     st.divider()
 
@@ -119,8 +111,7 @@ with tab1:
 # Tab 2: Calculations for question 1
 with tab2:
     st.markdown(f"**Time Series Plot for {time_range}:**", unsafe_allow_html=True)
-
-    # Pivot the df so we can a grouped line chart by indexes
+    # Pivot the df so we can use plotly to plot trace by trace for each index
     subset_data_pivot = (
         pd.melt(
             subset_data.drop("Period", axis=1),
@@ -134,11 +125,23 @@ with tab2:
 
     # Call the function to generate a line chart
     create_line_chart(subset_data_pivot)
+    st.caption(
+        "Remark: The time series plot below shows the performance of the indexes \
+            over time and it interacts with the user's selection of indexes."
+    )
     st.divider()
 
     # Display the formula for the aggregated statistics
-    st.markdown(f"**Formula for aggregated statistics:**", unsafe_allow_html=True)
+    st.markdown(
+        f"**Formula for aggregated statistics of return & risk:**",
+        unsafe_allow_html=True,
+    )
+    st.text("")
     st.latex(latex_formula_monthly_annual)
+    st.caption(
+        "Remark: Arithmetic mean is probably a better unbiased measure of central tendency for returns\
+        when we are looking at future returns."
+    )
     st.divider()
 
     st.markdown("**Monthly and Annual Average Return and Standard Deviation:**")
@@ -146,6 +149,9 @@ with tab2:
     # Call the function to generate a dataframe to store the monthly and annual aggregated statistics
     yearly_df = generate_yearly_df_stats(subset_data)
     generate_monthly_n_annual_stats_df(subset_data, yearly_df)
+    st.caption(
+        "Remark: Note that calculating standard deviations based on different granularities will result in different values."
+    )
 
     st.divider()
     col1, col2 = st.columns(2)
@@ -175,7 +181,7 @@ with tab3:
         yearly_df.drop(["Year", cfg["risk_free_asset"]], axis=1).cov()
     )
 
-    # List of pre-defined target mean returns
+    # List of pre-defined target mean returns stored in config.yml
     target_mean_returns = cfg["periods"][time_range]
 
     efficient_set = trust_region_solver(
@@ -184,6 +190,8 @@ with tab3:
 
     # Generate the dataframe that stores weights and portfolio mean returns
     # Color the minimum standard deviation and maximum Sharpe Ratio
+    # We do not need a custom function here because all the values are numeric
+
     st.dataframe(
         efficient_set.style.highlight_min(
             axis=0, props="background-color:LightGreen;", subset=["min_std_dev"]
@@ -214,6 +222,10 @@ with tab3:
 
     tangent_df = find_tangent_line(efficient_set, subset_data, cfg)
     generate_efficient_frontier_plot(efficient_set, x_scale, y_scale, tangent_df)
+    st.caption(
+        "Remark: The tangential line is plotted by connecting the risk free rate on the y-axis and point with the \
+        highest Sharpe ratio on the efficient frontier."
+    )
 
 ################################################################################################################################################
 # Tab 4: Calculations for optimal capital allocation
