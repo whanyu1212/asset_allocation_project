@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "asset-allocation-project"
+version = "0.1.0"
+description = ""
+authors = ["hy"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "=3.10.4"
+streamlit = "^1.26.0"
+streamlit-pandas-profiling = "^0.1.3"
+scipy = "^1.11.2"
+numpy = "1.23.2"
+pandas = "2.0"
+altair = "^5.1.1"
+openai = "^0.28.0"
+langchain = "^0.0.286"
+plotly = "^5.16.1"
+pydantic = "<2"
+ydata-profiling = "^4.5.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.25.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

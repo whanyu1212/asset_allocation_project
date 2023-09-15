@@ -93,7 +93,7 @@ def plot_corr_heatmap_by_year(yearly_df, cfg):
         y=headers,
         color_continuous_scale="Burgyl",
         text_auto=True,
-        labels=dict(color="Covariance"),
+        labels=dict(color="Correlation"),
     )
 
     fig.update_layout(title="Heatmap of Correlation Matrix (Year):")
