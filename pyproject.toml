@@ -18,6 +18,8 @@ langchain = "^0.0.286"
 plotly = "^5.16.1"
 pydantic = "<2"
 ydata-profiling = "^4.5.1"
+deap = "^1.4.1"
+pygad = "^3.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
