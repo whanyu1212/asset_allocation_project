@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import tempfile
-import pandas_profiling
+import pandas_profiling  # this is needed to import the profile report, somehow the linter does not recognize it
 from streamlit_pandas_profiling import st_profile_report
 from util.basic_utility import (
     parse_config,
