@@ -65,10 +65,17 @@ def trust_region_solver(expected_returns, cov_matrix, target_mean_returns):
         + ["portfolio_mean_return"],
     )
     # Calculate the Sharpe Ratio for each portfolio
-    final = pd.concat(
-        [pd.DataFrame(target_mean_returns, columns=["target_mean_returns"]), output],
-        axis=1,
-    ).assign(Sharpe_Ratio=lambda x: x["portfolio_mean_return"] / x["min_std_dev"])
+    final = (
+        pd.concat(
+            [
+                pd.DataFrame(target_mean_returns, columns=["target_mean_returns"]),
+                output,
+            ],
+            axis=1,
+        )
+        .assign(Sharpe_Ratio=lambda x: x["portfolio_mean_return"] / x["min_std_dev"])
+        .assign(Sum_of_weights=lambda x: x.iloc[:, 2:-2].sum(axis=1))
+    )
 
     return final
 
@@ -76,6 +83,7 @@ def trust_region_solver(expected_returns, cov_matrix, target_mean_returns):
 def find_tangent_line(efficient_set, subset_data, cfg):
     x_coord = [0]
     y_coord = [subset_data[cfg["risk_free_asset"]].mean() * 12]  # y intercept
+    print(y_coord)
     x_coord.append(
         efficient_set.loc[efficient_set["Sharpe_Ratio"].idxmax(), "min_std_dev"]
     )
@@ -107,6 +115,7 @@ def generate_efficient_frontier_plot(efficient_set, x_scale, y_scale, tangent_df
         .encode(
             x=alt.X(
                 "min_std_dev",
+                sort=None,
                 scale=x_scale,
                 axis=alt.Axis(title="Anualized Volatility", tickCount=5),
             ),
@@ -125,10 +134,15 @@ def generate_efficient_frontier_plot(efficient_set, x_scale, y_scale, tangent_df
         )
         .properties(
             width=600,
-            height=500,
+            height=600,
             title="Efficient Frontier Set & CML: ",
         )
         .interactive()
+    )
+    line = (
+        alt.Chart(efficient_set)
+        .mark_line(strokeDash=[3, 3], color="lightblue")
+        .encode(x=alt.X("min_std_dev", sort=None), y="target_mean_returns")
     )
     line_chart = (
         alt.Chart(tangent_df)
@@ -142,4 +156,6 @@ def generate_efficient_frontier_plot(efficient_set, x_scale, y_scale, tangent_df
             ),
         )
     )
-    st.altair_chart(chart + line_chart, theme="streamlit", use_container_width=True)
+    st.altair_chart(
+        chart + line + line_chart, theme="streamlit", use_container_width=True
+    )
