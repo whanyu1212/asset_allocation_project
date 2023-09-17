@@ -1,18 +1,12 @@
 import plotly.express as px
 import streamlit as st
-import numpy as np
 import pandas as pd
-from scipy.stats import gmean
-from util.basic_utility import (
-    highlight_max_by_column,
-    highlight_min_by_column,
-    parse_config,
-)
 
 
-def geo_mean(iterable):
-    a = np.array(iterable)
-    return a.prod() ** (1.0 / len(a))
+def format_to_two_decimal_places(value):
+    if isinstance(value, (int, float)):
+        return f"{value:.2f}"
+    return value
 
 
 def generate_monthly_n_annual_stats_df(subset_data, yearly_df):
@@ -52,10 +46,22 @@ def generate_monthly_n_annual_stats_df(subset_data, yearly_df):
             "Annualized_std",
             "Annualized_std(2)",
         ]
-    ]
+    ].applymap(format_to_two_decimal_places)
 
     st.dataframe(
-        monthly_annual_stats.style.apply(highlight_max_by_column),
+        monthly_annual_stats.style.highlight_max(
+            axis=0,
+            props="background-color:LightCoral;",
+            subset=[
+                "Monthly_return",
+                "Annual_arithmetic_return",
+                "Annual_geometric_return",
+            ],
+        ).highlight_min(
+            axis=0,
+            props="background-color:LightGreen;",
+            subset=["Monthly_std", "Annualized_std", "Annualized_std(2)"],
+        ),
         use_container_width=True,
         hide_index=True,
     )
