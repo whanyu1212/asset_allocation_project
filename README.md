@@ -36,6 +36,7 @@ flowchart LR
 |-- data
 |   |-- processed
 |       |-- processed_data.csv
+|       |-- optimization_excel.csv
 |   |-- raw
 |       |-- Project1-AssetAllocation-1980s_template.xlsx
 |       |-- Project1-AssetAllocation-1990s_template.xlsx
