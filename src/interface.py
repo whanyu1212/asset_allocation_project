@@ -177,6 +177,7 @@ with tab2:
 with tab3:
     st.markdown("**Objectives & Constraints:**")
     st.latex(Optimization_latex)
+    st.divider()
 
     # Expected return of the risky assets
     # No difference between x 12 or group by year first
@@ -198,7 +199,7 @@ with tab3:
     # Generate the dataframe that stores weights and portfolio mean returns
     # Color the minimum standard deviation and maximum Sharpe Ratio
     # We do not need a custom function here because all the values are numeric
-    st.markdown("**Python Scipy Solver:**")
+    st.markdown("**Python Scipy Solver (trust-constr):**")
     st.dataframe(
         efficient_set.style.highlight_min(
             axis=0, props="background-color:LightGreen;", subset=["min_std_dev"]

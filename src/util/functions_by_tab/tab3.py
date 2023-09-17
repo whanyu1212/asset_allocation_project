@@ -83,7 +83,6 @@ def trust_region_solver(expected_returns, cov_matrix, target_mean_returns):
 def find_tangent_line(efficient_set, subset_data, cfg):
     x_coord = [0]
     y_coord = [subset_data[cfg["risk_free_asset"]].mean() * 12]  # y intercept
-    print(y_coord)
     x_coord.append(
         efficient_set.loc[efficient_set["Sharpe_Ratio"].idxmax(), "min_std_dev"]
     )
