@@ -11,8 +11,8 @@ from util.basic_utility import (
 )
 from util.latex_formula import (
     latex_formula_monthly_annual,
-    portfolio_return_latex,
-    portfolio_risk_latex,
+    Optimization_latex,
+    portfolio_return_risk_latex,
 )
 
 from util.functions_by_tab.tab4 import (
@@ -25,7 +25,6 @@ from util.functions_by_tab.tab4 import (
 
 from util.functions_by_tab.tab1 import create_line_chart
 from util.functions_by_tab.tab2 import (
-    geo_mean,
     plot_corr_heatmap_by_month,
     plot_corr_heatmap_by_year,
     generate_monthly_n_annual_stats_df,
@@ -38,12 +37,15 @@ from util.functions_by_tab.tab3 import (
 )
 from util.functions_by_tab.tab5 import get_qna_ans
 
+
 # Global configurations for UI
 st.set_page_config(layout="wide")
 st.title("Navigating Asset Allocation")
 
 # Global variables
 data = pd.read_csv("./data/processed/processed_data.csv")
+
+optimization_exel = pd.read_csv("./data/processed/optimization_excel.csv")
 
 numeric_columns = data.select_dtypes(include="number").columns.tolist()
 
@@ -83,7 +85,7 @@ with st.sidebar:
     st.text("")
 
     risk_value = st.slider(
-        ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 0.5
+        ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 1.0
     )
 
     st.text("")
@@ -165,8 +167,8 @@ with tab2:
 ################################################################################################################################################
 
 with tab3:
-    st.markdown("**Optimal Asset Allocation:**")
-
+    st.markdown("**Objectives & Constraints:**")
+    st.latex(Optimization_latex)
     # Expected return of the risky assets
     expected_returns = (
         subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
@@ -191,7 +193,7 @@ with tab3:
     # Generate the dataframe that stores weights and portfolio mean returns
     # Color the minimum standard deviation and maximum Sharpe Ratio
     # We do not need a custom function here because all the values are numeric
-
+    st.markdown("**Python Scipy Solver:**")
     st.dataframe(
         efficient_set.style.highlight_min(
             axis=0, props="background-color:LightGreen;", subset=["min_std_dev"]
@@ -200,6 +202,17 @@ with tab3:
         ),
         use_container_width=True,
     )
+    if time_range == "2000s":
+        st.markdown("**Excel Solver:**")
+        st.dataframe(
+            optimization_exel.style.highlight_min(
+                axis=0, props="background-color:LightGreen;", subset=["min_std_dev"]
+            ).highlight_max(
+                axis=0, props="background-color:LightCoral;", subset=["Sharpe_Ratio"]
+            ),
+            use_container_width=True,
+        )
+
     st.caption(
         "Remark: The allocation weights for each asset class are determined through the application of the trust region method.\
         The minimum standard deviation is highlighted in green and the maximum Sharpe is highlighted in coral."
@@ -240,10 +253,9 @@ with tab4:
     )
     st.divider()
     # Use latex to display the formula
-    st.markdown(f"<h6>Formula: </h6>", unsafe_allow_html=True)
+    st.markdown(f"<h6>Portfolio Return & Risk Formula: </h6>", unsafe_allow_html=True)
     # Latex formula
-    st.latex(portfolio_return_latex)
-    st.latex(portfolio_risk_latex)
+    st.latex(portfolio_return_risk_latex)
     st.divider()
     # Dataframe that stores the portfolio return and risk for each investor
     portfolio_return_df = calculate_agg_portfolio_return(
