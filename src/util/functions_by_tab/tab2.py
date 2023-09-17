@@ -1,6 +1,12 @@
 import plotly.express as px
 import streamlit as st
+import numpy as np
 import pandas as pd
+
+
+def geo_mean(iterable):
+    a = np.array(iterable)
+    return a.prod() ** (1.0 / len(a))
 
 
 def format_to_two_decimal_places(value):
