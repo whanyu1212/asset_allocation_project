@@ -10,9 +10,16 @@ latex_formula_monthly_annual = r"""\begin{align*}
             &\text{Annual Standard Deviation(2)} : \sqrt{\frac{1}{n-1} \sum_{i=1}^{n}(\text{Annual Return}_i - \bar{Annual\ Return})^2}
             \end{align*}
             """
-portfolio_return_latex = (
-    r"""\text{Porfolio Return} :\R_p = R_f + \sum_{i=1}^{n} w_i \cdot (R_i - R_f)"""
-)
-portfolio_risk_latex = r"""
-            \text{Porfolio Risk} :\sigma_p = \sqrt{\sum \left[ w_i \cdot \sigma_i \right]^2 + 
-            \sum\sum \left[ w_i \cdot w_j \cdot \sigma_i \cdot \sigma_j \cdot \rho_{ij} \right]}"""
+Optimization_latex = r"""
+            \begin{align*}
+            & \text{Objective Function:} \quad \mathbf{w}^* = \underset{\mathbf{w}}{\text{argmin}} \left(\sigma_p = \sqrt{\mathbf{w}^T \Sigma \mathbf{w}}\right) \\
+            & \text{Constraint 1:} \quad \text{Target Mean Return} - \text{Expected Return} = 0 \\
+            & \text{Constraint 2:} \quad \mathbf{w}^T \mathbf{1} = 1 \\
+            \end{align*}
+            """
+portfolio_return_risk_latex = r"""\begin{align*}
+            &\text{Portfolio Return}: \R_p = R_f + \sum_{i=1}^{n} w_i \cdot (R_i - R_f) \\
+            &\text{Portfolio Risk}: \sigma_p = \sqrt{\sum \left[ w_i \cdot \sigma_i \right]^2 + 
+            \sum\sum \left[ w_i \cdot w_j \cdot \sigma_i \cdot \sigma_j \cdot \rho_{ij} \right]}
+            \end{align*}
+            """
