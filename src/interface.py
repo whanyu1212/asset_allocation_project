@@ -35,14 +35,14 @@ from util.functions_by_tab.tab3 import (
     trust_region_solver,
     find_tangent_line,
 )
-from util.functions_by_tab.tab5 import get_qna_ans
+from util.functions_by_tab.tab5 import get_qna_ans, file_formats, load_data
 
 
 # Global configurations for UI
 st.set_page_config(layout="wide")
 st.title("Navigating Asset Allocation")
 
-# Global variables
+# Global variables for easy referencing later on
 data = pd.read_csv("./data/processed/processed_data.csv")
 
 optimization_exel = pd.read_csv("./data/processed/optimization_excel.csv")
@@ -84,6 +84,7 @@ with st.sidebar:
 
     st.text("")
 
+    # Preset group average risk profile to 100% lmao
     risk_value = st.slider(
         ":bust_in_silhouette: User defined weightage for risky assets", 0.0, 1.0, 1.0
     )
@@ -94,6 +95,7 @@ with st.sidebar:
     link = ":point_right: Github Repository for the dashboard: [link](https://github.com/whanyu1212/asset_allocation_project)"
     st.markdown(link, unsafe_allow_html=True)
     st.text("")
+    # Add a link to the solver documentation
     link_solver = ":point_right: Documentation for the solver: [link](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-trustconstr.html#optimize-minimize-trustconstr)"
     st.markdown(link_solver, unsafe_allow_html=True)
 ################################################################################################################################################
@@ -113,6 +115,7 @@ with tab1:
 # Tab 2: Calculations for question 1
 with tab2:
     st.markdown(f"**Time Series Plot for {time_range}:**", unsafe_allow_html=True)
+
     # Pivot the df so we can use plotly to plot trace by trace for each index
     subset_data_pivot = (
         pd.melt(
@@ -122,7 +125,9 @@ with tab2:
             value_name="Value",
         )
         .sort_values(by=["Date", "Indexes"])
-        .query("Indexes in @indexes_options")
+        .query(
+            "Indexes in @indexes_options"
+        )  # interacts wth the user's selection of indexes
     )
 
     # Call the function to generate a line chart
@@ -150,6 +155,7 @@ with tab2:
     st.text("")
     # Call the function to generate a dataframe to store the monthly and annual aggregated statistics
     yearly_df = generate_yearly_df_stats(subset_data)
+    # Populate the table with the dataframe
     generate_monthly_n_annual_stats_df(subset_data, yearly_df)
     st.caption(
         "Remark: Note that calculating standard deviations based on different granularities will result in different values."
@@ -159,8 +165,10 @@ with tab2:
     col1, col2 = st.columns(2)
 
     with col1:
+        # Correlation plot by month
         plot_corr_heatmap_by_month(subset_data, cfg)
     with col2:
+        # Correlation plot by year
         plot_corr_heatmap_by_year(yearly_df, cfg)
 
 
@@ -169,16 +177,13 @@ with tab2:
 with tab3:
     st.markdown("**Objectives & Constraints:**")
     st.latex(Optimization_latex)
+
     # Expected return of the risky assets
+    # No difference between x 12 or group by year first
     expected_returns = (
         subset_data.drop(["Date", "Period", cfg["risk_free_asset"]], axis=1).mean() * 12
     )
-
-    # cov_matrix = subset_data.drop(
-    #     ["Date", "Period", cfg["risk_free_asset"]], axis=1
-    # ).cov()
-
-    # expected_returns = yearly_df.drop(["Year"], axis=1).mean()
+    # Yearly covariance matrix
     cov_matrix = np.array(
         yearly_df.drop(["Year", cfg["risk_free_asset"]], axis=1).cov()
     )
@@ -202,6 +207,7 @@ with tab3:
         ),
         use_container_width=True,
     )
+    # Show the excel solver results if the user selects the 2000s
     if time_range == "2000s":
         st.markdown("**Excel Solver:**")
         st.dataframe(
@@ -292,28 +298,34 @@ with tab4:
 
 with tab5:
     # File uploader
-    uploaded_file = st.file_uploader("Choose a file", type="csv")
-    # If something is uploaded, read it into a pd dataframe
-    if uploaded_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(uploaded_file.read())
-            csv_path = tmp_file.name
-            df = pd.read_csv(csv_path)
-            if df.empty == False:
-                st.success("File uploaded successfully!")
-            if st.checkbox("Show raw data"):
-                st.dataframe(df, use_container_width=True)
-            st.text("")
-            question = st.text_input(
-                "**Chat with your data**",
-                value="""Enter your question here...""",
-            )
 
-            if question != """Enter your question here...""":
-                with st.spinner(text="Retrieving answer in progress..."):
-                    get_qna_ans(df, question)
+    uploaded_file = st.file_uploader(
+        "Upload a Data file",
+        type=list(file_formats.keys()),
+        help="Various File formats are Supported",
+    )
+    # uploaded_file = st.file_uploader("Choose a file", type="csv")
+    # If something is uploaded, read it into a pd dataframe
+    if uploaded_file:
+        with st.spinner(text="Reading data in progress..."):
+            df = load_data(uploaded_file)
+        if df.empty == False:
+            st.success("File uploaded successfully!")
+        on = st.toggle("Display the raw data")
+        if on:
+            with st.spinner(text="Rendering dataframe in progress..."):
+                st.dataframe(df, use_container_width=True)
+
+        question = st.text_input(
+            "**Chat with your data**",
+            value="""Enter your question here...""",
+        )
+
+        if question != """Enter your question here...""":
+            with st.spinner(text="Retrieving answer in progress..."):
+                get_qna_ans(df, question)
     else:
         st.warning(
-            "Please upload a non-empty csv file before you can start chatting with the data",
+            "Please upload a non-empty excel or csv file before you can start chatting with the data",
             icon="⚠️",
         )
