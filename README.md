@@ -94,6 +94,11 @@ echo 'eval "$(pyenv init -)"' >> ~/.zshrc
 
 
 (2) Use Poetry to ensure that this codebase is reproducible:
+  - poetry can be installed using the following command in terminal if you are using mac/linux
+    ```curl -sSL https://install.python-poetry.org | python3 -```
+  - For windows(powersell):
+    ```(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -```
+  <br>
   - Assume you already have a root folder of the project created
   - Call ```poetry init``` in terminal to instantiate a pyproject.toml, running ```poetry add [package]``` will create another poetry.lock file. 
   - Having these 2 files together and run ```poetry install``` after cloning the repository will ensure that someone else would be able to reproduce the environment and dependency of this project.
@@ -103,5 +108,3 @@ echo 'eval "$(pyenv init -)"' >> ~/.zshrc
 
 (4) Run the streamlit App:
 ```streamlit run ./src/interface.py```
-
-#### What this project is about?
