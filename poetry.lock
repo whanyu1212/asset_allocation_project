@@ -3039,6 +3039,20 @@ pandas-profiling = "*"
 streamlit = ">=0.63"
 
 [[package]]
+name = "tabulate"
+version = "0.9.0"
+description = "Pretty-print tabular data"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
+    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
+]
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "tangled-up-in-unicode"
 version = "0.2.0"
 description = "Access to the Unicode Character Database (UCD)"
@@ -3549,4 +3563,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "=3.10.4"
-content-hash = "c17cb5c3d9b2a1d288a5b3f3c3c5d095315f729bb419ba7dbc3b00d19afbc27d"
+content-hash = "2ed36d4b7b303bec4aeb2aba656979e119181297521d89d1df15379abc50f0c5"
